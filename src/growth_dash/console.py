@@ -65,11 +65,14 @@ def decrypt(fname, pwd):
 @click.option('-d', '--decrypt', 'encfile', help='Decrypt a data file')
 def main(srcfile, encfile):
   """Command line tools for cleaning data prior to using for dashboard"""
+  
+  # --encrypt INPUT_FILE; prompt for password and write encrypted text to INPUT_FILE.enc
   if srcfile:
     pwd = click.prompt('Password', hide_input=True)
     outfname = encrypt(srcfile, pwd)
     click.echo(srcfile + ' encrypted to ' + outfname)
 
+  # --decrypt ENCRYPTED_FILE; prompt for password and print decrypted text
   if encfile:
     pwd = click.prompt('Password', hide_input=True)
     dec = decrypt(encfile, pwd)
