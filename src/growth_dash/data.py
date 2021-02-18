@@ -4,16 +4,23 @@ import nacl.secret
 import nacl.hash
 import zlib
 import base64
+import logging
+from pprint import pformat
 
 def fetch(url):
+  logging.info('Fetching ' + url)
+
   # Try to read as local file if url doesn't start with http
   if not url.lower().startswith('http'):
     with open(url, 'r') as f:
       return f.read()
   
   # Read as URL
-  resp = requests.get(url)
-  return resp.contents
+  with requests.get(url, allow_redirects=True) as resp:
+    logging.info('Status ' + str(resp.status_code) + ' from ' + resp.url + '\n Headers: ' + pformat(resp.headers))
+
+    resp.raise_for_status()
+    return resp.content
 
 def kdf(size, pwd):
   """ Generate appropriate sized key from password """
@@ -57,6 +64,7 @@ def load_data(src, pwd=None):
   try:
     decrypted = decrypt(contents, pwd)
   except Exception as e:
+    logging.warn('Exception while decrypting source data. Assuming incorrect password.', exc_info=True)
     raise ValueError('Incorrect password') from e
     
   return decrypted.decode('utf-8')
