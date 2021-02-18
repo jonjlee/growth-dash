@@ -19,34 +19,44 @@ def kdf(size, pwd):
   """ Generate appropriate sized key from password """
   return nacl.hash.blake2b(pwd, digest_size=size)[:size]
 
-def decrypt(encrypted, pwd):
+def decrypt(contents, pwd):
   """ Decrypt encrypted string, which should be gzipped, encrypted with pynacl, and base64 encoded. """
   
   # Base 64 decode
-  zipd = base64.b64decode(encrypted)
+  decoded = base64.b64decode(contents)
   
-  # Hash password to appropriate size key
-  pwdbytes = pwd.encode('utf-8')
-  key = kdf(nacl.secret.SecretBox.KEY_SIZE, pwdbytes)
+  # Try to decrypt if a password was provided
+  if pwd is not None:
+    # Hash password to appropriate size key
+    pwdbytes = pwd.encode('utf-8')
+    key = kdf(nacl.secret.SecretBox.KEY_SIZE, pwdbytes)
+  
+    # Decrypt
+    box = nacl.secret.SecretBox(key)
+    zipd = box.decrypt(decoded)
 
-  # Decrypt
-  box = nacl.secret.SecretBox(key)
-  zipd = box.decrypt(zipd)
+  else:
+    zipd = decoded
+    
   
   # Ungzip
-  contents = zlib.decompress(zipd)
+  unzipped = zlib.decompress(zipd)
   
-  return contents
+  return unzipped
 
 @st.cache
-def load_data(src, pwd):
+def load_data(src, pwd=None):
+  
+  if src is None:
+    return None
   
   # Fetch source data URL
-  
-  
-  # Decrypt
-  with open(src, 'r') as f:
-    encrypted = f.read()
-    contents = decrypt(encrypted, pwd)
+  contents = fetch(src)
 
-  return contents.decode('utf-8')
+  # Decrypt
+  try:
+    decrypted = decrypt(contents, pwd)
+  except Exception as e:
+    raise ValueError('Incorrect password') from e
+    
+  return decrypted.decode('utf-8')
