@@ -63,8 +63,8 @@ def load_data(src, pwd=None):
   # Decrypt
   try:
     decrypted = decrypt(contents, pwd)
-  except Exception as e:
-    logging.warn('Exception while decrypting source data. Assuming incorrect password.', exc_info=True)
+  except (nacl.exceptions.CryptoError, zlib.error) as e:
+    logging.warn(str(e) + ' while decrypting source data. Assuming incorrect password.', exc_info=True)
     raise ValueError('Incorrect password') from e
     
   return decrypted.decode('utf-8')
