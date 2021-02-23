@@ -1,6 +1,8 @@
 import streamlit as st
 import html
 import base64
+import pandas as pd
+from . import gc_stats as gc
 from .data import load_data
 
 # Main raw source data file
@@ -71,6 +73,9 @@ def run():
   if DATA == None:
     return
   
-  # Source file location and password
-
-  st.write(DATA)
+  # Load growth chart data
+  gc.init()
+  who_weight_percentile_data = gc.get_percentile_lines(gc.GC_TYPE.WEIGHT_WHO, gc.SEX.M)
+  who_weight_percentiles = pd.DataFrame(who_weight_percentile_data, index=[2,5,10,25,50,75,90,95,98]).transpose()
+  
+  st.line_chart(who_weight_percentiles)
