@@ -1,11 +1,12 @@
 import streamlit as st
+import pandas as pd
+import io
 import requests
 import nacl.secret
 import nacl.hash
 import zlib
 import base64
 import logging
-from pprint import pformat
 
 def fetch(url):
   logging.info('Fetching ' + url)
@@ -66,5 +67,12 @@ def load_data(src, pwd=None):
   except (nacl.exceptions.CryptoError, zlib.error) as e:
     logging.warn(str(e) + ' while decrypting source data. Assuming incorrect password.', exc_info=True)
     raise ValueError('Incorrect password') from e
-    
-  return decrypted.decode('utf-8')
+  
+  # Parse CSV text to pandas DataFrame
+  df = pd.read_csv(
+    io.BytesIO(decrypted),
+    header=0,                                                               # explicitly use row 0 as header row so we can replace column names next
+    names=['MRN', 'Name', 'DOB', 'Metric', 'Val', 'TS', 'Row', 'Misc'],     # specify column names explicitly
+    usecols=['MRN', 'DOB', 'Metric', 'Val', 'TS'])                  # only select and return the useful columns
+  
+  return df

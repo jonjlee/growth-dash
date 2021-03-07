@@ -1,0 +1,22 @@
+# Constants to be used as gc_type parameter representing growth chart types
+GC_HEIGHT_OLSEN='OLSEN_LENGTH'
+GC_HEIGHT_FENTON='FENTON_LENGTH'
+GC_HEIGHT_WHO='WHO_LENGTH'
+GC_HEIGHT_CDC='CDC_STATURE'
+GC_WEIGHT_OLSEN='OLSEN_WEIGHT'
+GC_WEIGHT_FENTON='FENTON_WEIGHT'
+GC_WEIGHT_WHO='WHO_WEIGHT'
+GC_WEIGHT_CDC='CDC_WEIGHT'
+GC_HC_OLSEN='OLSEN_HEADC'
+GC_HC_FENTON='FENTON_HEADC'
+GC_HC_WHO='WHO_HEADC'
+GC_HC_CDC='CDC_HEADC'
+GC_BMI_CDC='CDC_BMI'
+GC_WFL_WHO='WHO_WFL'
+
+# Constants to be used with sex parameter
+MALE='male'
+FEMALE='female'
+  
+# Standard percentile lines for growth charts
+DEFAULT_PERCENTILES = [3,10,25,50,75,90,97]

@@ -2,6 +2,7 @@ import streamlit as st
 import html
 import base64
 import pandas as pd
+import altair as alt
 from . import gc_stats as gc
 from .data import load_data
 
@@ -70,12 +71,73 @@ def run():
 
   # Ensure source data file can be loaded
   DATA = ensure_data_loaded()
-  if DATA == None:
+  if DATA is None:
     return
   
   # Load growth chart data
-  gc.init()
-  who_weight_percentile_data = gc.get_percentile_lines(gc.GC_TYPE.WEIGHT_WHO, gc.SEX.M)
-  who_weight_percentiles = pd.DataFrame(who_weight_percentile_data, index=[2,5,10,25,50,75,90,95,98]).transpose()
+  who_weight_m_percentiles = gc.get_percentile_lines(gc.GC_WEIGHT_WHO, gc.MALE)
+  who_weight_f_percentiles = gc.get_percentile_lines(gc.GC_WEIGHT_WHO, gc.FEMALE)
+  who_height_m_percentiles = gc.get_percentile_lines(gc.GC_HEIGHT_WHO, gc.MALE)
+  who_height_f_percentiles = gc.get_percentile_lines(gc.GC_HEIGHT_WHO, gc.FEMALE)
+  who_wfl_m_percentiles = gc.get_percentile_lines(gc.GC_WFL_WHO, gc.MALE)
+  who_wfl_f_percentiles = gc.get_percentile_lines(gc.GC_WFL_WHO, gc.FEMALE)
   
-  st.line_chart(who_weight_percentiles)
+  # Set up weight charts
+  percentiles = ['3', '10', '25', '50', '75', '90', '97']
+  weight_encoding = {
+    'x': alt.X(
+      field='index',                            # 'index' column created by reset_index() above
+      type='quantitative',                      # quantitative = continuous real value (altair-viz.github.io/user_guide/encoding.html#encoding-data-types)
+      axis=alt.Axis(
+        title='Age (months)')),
+    'y': alt.Y(
+      field='value',                            # 'value' column created by transform_fold() above
+      type='quantitative',
+      axis=alt.Axis(title='Weight (kg)')),
+    'color': alt.Color(                            # define colors for the multiple lines
+      field='key',                              # 'key' column created by transform_fold() above
+      type='nominal',                           # nominal = discrete unordered category
+      legend=alt.Legend(                        # temporary legend config with text-only - no title, no lines, labels moved a few pixels left
+        title=None,                             # TODO: use mark_text() to properly position labels on lines directly
+        symbolSize=0,
+        labelOffset=-10,
+        values=percentiles[::-1]),
+      scale=alt.Scale(
+        domain=percentiles,                     # map all percentile values to blue
+        range=['lightblue']*len(percentiles)))
+  }
+  
+  ct_weight_m=alt.Chart(
+    who_weight_m_percentiles.reset_index()      # reset_index() converts row labels (age in months) to its own column
+  ).transform_fold(                             # transform_fold: convert wide-form to long-form (altair-viz.github.io/user_guide/data.html#data-long-vs-wide)
+    percentiles                                 # eg. index 5   10  25         index key value
+                                                #     1 mo  5.0 6.0 7.0   ->   1 mo  5   5.0
+                                                #     2 mo  5.2 6.2 7.2        1 mo  10  6.0
+                                                #                              1 mo  25  7.0
+                                                #                              ...
+  ).mark_line(                                  # Make a line plot
+  ).encode(                                     # Configure chart visual (map visual properties to data columns, altair-viz.github.io/user_guide/encoding.html)
+    **weight_encoding
+  )
+    
+  ct_weight_f=alt.Chart(
+    who_weight_f_percentiles.reset_index()
+  ).transform_fold(
+    percentiles
+  ).mark_line(
+  ).encode(
+    **weight_encoding
+  )
+  
+  # Build list of patients
+  mrns = DATA['MRN'].unique()
+  mrns.sort()
+  mrn = st.sidebar.selectbox('MRN', mrns)
+  
+  # Select specific patient's data
+  ptdata = DATA.loc[DATA['MRN']==mrn]
+  
+  st.header('Weight (Boys 0-2 years)')
+  st.altair_chart(ct_weight_m, use_container_width=True)
+  
+  st.write(ptdata)
