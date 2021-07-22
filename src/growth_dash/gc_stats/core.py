@@ -152,3 +152,7 @@ def percentile_to_x(percentile, L, M, S):
 def x_to_percentile(x, L, M, S):
   Z = x_to_zscore(x, L, M, S)
   return normsdist(Z)
+  
+def x_to_zscore_and_percentile(x, L, M, S):
+  Z = x_to_zscore(x, L, M, S)
+  return (Z, normsdist(Z))

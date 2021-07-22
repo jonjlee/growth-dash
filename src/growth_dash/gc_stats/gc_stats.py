@@ -165,22 +165,28 @@ def percentile(gc_type, sex, x, val):
   
   x is usually the age in months. For weight-for-length, x is length.
   """
-  LMS_table = get_lms_table(gc_type, sex)
-  if LMS_table is None:
-    return None
-
-  LMS = get_lms_for_x(LMS_table, x)
-  return x_to_percentile(val, LMS['L'], LMS['M'], LMS['S'])
+  Z, percentile = zscore_percentile(gc_type, sex, x, val)
+  return percentile
 
 def zscore(gc_type, sex, x, val):
   """
-  Return the z-score of a given value on a growth chart
+  Return the z-score of a given value on a growth chart.
 
+  x is usually the age in months. For weight-for-length, x is length.
+  """
+  Z, percentile = zscore_percentile(gc_type, sex, x, val)
+  return Z
+  
+def zscore_percentile(gc_type, sex, x, val):
+  """
+  Return both z-score and percentile of a given value on a growth chart
+  
   x is usually the age in months. For weight-for-length, x is length.
   """
   LMS_table = get_lms_table(gc_type, sex)
   if LMS_table is None:
-    return None
+    return None, None
 
   LMS = get_lms_for_x(LMS_table, x)
-  return x_to_zscore(val, LMS['L'], LMS['M'], LMS['S'])
+  return x_to_zscore_and_percentile(val, LMS['L'], LMS['M'], LMS['S'])
+  
